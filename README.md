@@ -1,16 +1,22 @@
-# done_flow
+# DoneFlow
 
-A minimal to-do list with add, delete and local save.
+A clean, minimal to-do app with persistence, swipe-to-delete and dark mode.
 
-## Getting Started
+![DoneFlow Demo](screenshots/demo.gif)
 
-This project is a starting point for a Flutter application.
+## Features
+- Add / Delete tasks
+- Mark as complete
+- Swipe to delete
+- Data saved locally (`shared_preferences`)
+- Clean, animated UI
 
-A few resources to get you started if this is your first Flutter project:
+## Tech
+- Flutter
+- `shared_preferences`
+- `Dismissible` widget
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Run
+```bash
+flutter pub get
+flutter run
