@@ -2,7 +2,9 @@ import 'package:done_flow/core/models/tasks.dart';
 import 'package:done_flow/core/providers/task_provider.dart';
 import 'package:done_flow/core/providers/theme_provider.dart';
 import 'package:done_flow/core/widgets/add_task_dialog.dart';
+import 'package:done_flow/core/widgets/bulk_actions_bar.dart';
 import 'package:done_flow/core/widgets/filter_bar.dart';
+import 'package:done_flow/core/widgets/task_templates.dart';
 import 'package:done_flow/core/widgets/task_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +46,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Task "${task.title}" added successfully!'),
+              action: SnackBarAction(
+                label: 'Undo',
+                onPressed: () {
+                  // TODO: Implement undo functionality
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showTemplateSelector() {
+    showDialog(
+      context: context,
+      builder: (context) => TaskTemplateSelector(
+        onTemplateSelected: (task) {
+          context.read<TaskProvider>().addTask(task);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Template "${task.title}" added successfully!'),
               action: SnackBarAction(
                 label: 'Undo',
                 onPressed: () {
@@ -105,6 +129,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       body: Column(
         children: [
           const FilterBar(),
+          const BulkActionsBar(),
           Expanded(
             child: Consumer<TaskProvider>(
               builder: (context, taskProvider, child) {
@@ -124,7 +149,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                         Text(
                           taskProvider.searchQuery.isNotEmpty ||
                                   taskProvider.selectedCategory != null ||
-                                  taskProvider.selectedPriority != null
+                                  taskProvider.selectedPriority != null ||
+                                  taskProvider.dateRangeFilter != null
                               ? 'No tasks match your filters'
                               : 'No tasks yet!\nTap + to add one',
                           textAlign: TextAlign.center,
@@ -149,6 +175,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       onToggle: () => taskProvider.toggleTask(originalIndex),
                       onDelete: () => _deleteTask(originalIndex, task),
                       onEdit: () => _editTask(originalIndex, task),
+                      isSelectionMode: taskProvider.isSelectionMode,
+                      isSelected: taskProvider.selectedTasks.contains(originalIndex),
+                      onSelectionChanged: () => taskProvider.toggleTaskSelection(originalIndex),
                     ).animate(
                       delay: (index * 50).ms,
                     ).fadeIn(duration: 300.ms).slideX(begin: 0.2);
@@ -159,16 +188,38 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddTaskDialog,
         tooltip: 'Add new task',
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Task'),
       ).animate(
         controller: _fabAnimationController,
       ).scale(
         begin: const Offset(0.8, 0.8),
         end: const Offset(1.0, 1.0),
         duration: 200.ms,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.bookmark_border),
+              onPressed: _showTemplateSelector,
+              tooltip: 'Use template',
+            ),
+            const SizedBox(width: 48), // Space for FAB
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () => _showMoreOptionsMenu(context),
+              tooltip: 'More options',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -245,6 +296,52 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               foregroundColor: Colors.white,
             ),
             child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMoreOptionsMenu(BuildContext context) {
+    final taskProvider = context.read<TaskProvider>();
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.select_all),
+            title: const Text('Select Tasks'),
+            subtitle: const Text('Choose multiple tasks for bulk actions'),
+            onTap: () {
+              Navigator.of(context).pop();
+              taskProvider.toggleSelectionMode();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.archive),
+            title: const Text('Archive View'),
+            subtitle: const Text('View completed tasks'),
+            onTap: () {
+              Navigator.of(context).pop();
+              // TODO: Implement archive view
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Archive view coming soon!')),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Settings'),
+            subtitle: const Text('App preferences and settings'),
+            onTap: () {
+              Navigator.of(context).pop();
+              // TODO: Implement settings screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Settings coming soon!')),
+              );
+            },
           ),
         ],
       ),

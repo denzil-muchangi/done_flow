@@ -17,6 +17,8 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
   TaskPriority _priority = TaskPriority.medium;
   TaskCategory _category = TaskCategory.other;
   DateTime? _dueDate;
+  RecurrenceType _recurrence = RecurrenceType.none;
+  int _recurrenceInterval = 1;
 
   @override
   void dispose() {
@@ -46,6 +48,8 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
       category: _category,
       dueDate: _dueDate,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      recurrence: _recurrence,
+      recurrenceInterval: _recurrenceInterval,
     );
 
     widget.onAdd(task);
@@ -196,6 +200,74 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                   ),
               ],
             ),
+            const SizedBox(height: 20),
+
+            // Recurrence selector
+            Text(
+              'Repeat',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<RecurrenceType>(
+              value: _recurrence,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              items: RecurrenceType.values.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(
+                    type == RecurrenceType.none
+                        ? 'Never'
+                        : type.name.toUpperCase(),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) => setState(() => _recurrence = value!),
+            ),
+            if (_recurrence != RecurrenceType.none) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text('Every', style: theme.textTheme.bodyMedium),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 60,
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      controller: TextEditingController(text: _recurrenceInterval.toString()),
+                      onChanged: (value) {
+                        final interval = int.tryParse(value);
+                        if (interval != null && interval > 0) {
+                          setState(() => _recurrenceInterval = interval);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _recurrence == RecurrenceType.daily
+                        ? 'day(s)'
+                        : _recurrence == RecurrenceType.weekly
+                            ? 'week(s)'
+                            : _recurrence == RecurrenceType.monthly
+                                ? 'month(s)'
+                                : 'year(s)',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Action buttons

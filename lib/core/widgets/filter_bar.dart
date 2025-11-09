@@ -1,7 +1,9 @@
 import 'package:done_flow/core/models/tasks.dart';
 import 'package:done_flow/core/providers/task_provider.dart';
+import 'package:done_flow/core/widgets/statistics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 class FilterBar extends StatelessWidget {
   const FilterBar({super.key});
@@ -69,12 +71,43 @@ class FilterBar extends StatelessWidget {
                     if (taskProvider.searchQuery.isNotEmpty ||
                         taskProvider.selectedCategory != null ||
                         taskProvider.selectedPriority != null ||
-                        !taskProvider.showCompleted)
+                        !taskProvider.showCompleted ||
+                        taskProvider.dateRangeFilter != null)
                       ActionChip(
                         label: const Text('Clear Filters'),
                         onPressed: taskProvider.clearFilters,
                         avatar: const Icon(Icons.clear_all),
                       ),
+
+                    // Date range filter
+                    ActionChip(
+                      label: Text(taskProvider.dateRangeFilter != null
+                          ? '${DateFormat('MMM d').format(taskProvider.dateRangeFilter!.start)} - ${DateFormat('MMM d').format(taskProvider.dateRangeFilter!.end)}'
+                          : 'Date Range'),
+                      onPressed: () => _showDateRangePicker(context, taskProvider),
+                      avatar: const Icon(Icons.date_range),
+                    ),
+
+                    // Sort options
+                    ActionChip(
+                      label: Text('Sort: ${taskProvider.sortOption.name}'),
+                      onPressed: () => _showSortDialog(context, taskProvider),
+                      avatar: Icon(taskProvider.sortAscending ? Icons.arrow_upward : Icons.arrow_downward),
+                    ),
+
+                    // Statistics
+                    ActionChip(
+                      label: const Text('Stats'),
+                      onPressed: () => _showStatistics(context),
+                      avatar: const Icon(Icons.bar_chart),
+                    ),
+
+                    // Export
+                    ActionChip(
+                      label: const Text('Export'),
+                      onPressed: () => _showExportDialog(context, taskProvider),
+                      avatar: const Icon(Icons.download),
+                    ),
 
                     const SizedBox(width: 8),
 
@@ -173,6 +206,100 @@ class FilterBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showDateRangePicker(BuildContext context, TaskProvider taskProvider) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: taskProvider.dateRangeFilter,
+    );
+
+    if (picked != null) {
+      taskProvider.setDateRangeFilter(picked);
+    }
+  }
+
+  void _showSortDialog(BuildContext context, TaskProvider taskProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sort Tasks'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: TaskSortOption.values.map((option) {
+            final isSelected = taskProvider.sortOption == option;
+            return ListTile(
+              title: Text(option.name.replaceAll('dueDate', 'Due Date')
+                  .replaceAll('createdDate', 'Created Date')
+                  .replaceAll('category', 'Category')
+                  .replaceAll('title', 'Title')
+                  .replaceAll('priority', 'Priority')),
+              leading: Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked),
+              onTap: () {
+                taskProvider.setSortOption(option);
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showStatistics(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const StatisticsScreen()),
+    );
+  }
+
+  void _showExportDialog(BuildContext context, TaskProvider taskProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export Data'),
+        content: const Text('Choose export format:'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // TODO: Implement JSON export with file saving
+              final jsonData = taskProvider.exportToJson();
+              // For now, just show in console
+              print('JSON Export: $jsonData');
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Data exported to console (JSON)')),
+              );
+            },
+            child: const Text('JSON'),
+          ),
+          TextButton(
+            onPressed: () {
+              // TODO: Implement CSV export with file saving
+              final csvData = taskProvider.exportToCsv();
+              // For now, just show in console
+              print('CSV Export:\n$csvData');
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Data exported to console (CSV)')),
+              );
+            },
+            child: const Text('CSV'),
+          ),
+        ],
+      ),
     );
   }
 }

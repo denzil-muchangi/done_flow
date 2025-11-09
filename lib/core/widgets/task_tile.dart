@@ -8,6 +8,9 @@ class TaskTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback? onSelectionChanged;
 
   const TaskTile({
     super.key,
@@ -15,6 +18,9 @@ class TaskTile extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     this.onEdit,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onSelectionChanged,
   });
 
   Color _getPriorityColor(BuildContext context) {
@@ -107,6 +113,18 @@ class TaskTile extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    // Selection checkbox (when in selection mode)
+                    if (isSelectionMode) ...[
+                      Checkbox(
+                        value: isSelected,
+                        onChanged: (_) => onSelectionChanged?.call(),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+
                     // Priority indicator
                     Container(
                       width: 4,
@@ -120,16 +138,17 @@ class TaskTile extends StatelessWidget {
                     ).shake(duration: 500.ms),
                     const SizedBox(width: 12),
 
-                    // Checkbox with animation
-                    Checkbox(
-                      value: task.isDone,
-                      onChanged: (_) => onToggle(),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ).animate(
-                      target: task.isDone ? 1 : 0,
-                    ).scale(duration: 200.ms),
+                    // Checkbox with animation (only when not in selection mode)
+                    if (!isSelectionMode)
+                      Checkbox(
+                        value: task.isDone,
+                        onChanged: (_) => onToggle(),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ).animate(
+                        target: task.isDone ? 1 : 0,
+                      ).scale(duration: 200.ms),
 
                     const SizedBox(width: 12),
 
@@ -221,6 +240,14 @@ class TaskTile extends StatelessWidget {
                           fontWeight: task.isOverdue ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
+                      if (task.isRecurring) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.repeat,
+                          size: 14,
+                          color: colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ],
                     ],
 
                     const Spacer(),
