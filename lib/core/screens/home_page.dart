@@ -2,8 +2,10 @@ import 'package:done_flow/core/models/tasks.dart';
 import 'package:done_flow/core/providers/task_provider.dart';
 import 'package:done_flow/core/providers/theme_provider.dart';
 import 'package:done_flow/core/widgets/add_task_dialog.dart';
+import 'package:done_flow/core/widgets/archive_screen.dart';
 import 'package:done_flow/core/widgets/bulk_actions_bar.dart';
 import 'package:done_flow/core/widgets/filter_bar.dart';
+import 'package:done_flow/core/widgets/settings_screen.dart';
 import 'package:done_flow/core/widgets/task_templates.dart';
 import 'package:done_flow/core/widgets/task_tile.dart';
 import 'package:flutter/material.dart';
@@ -325,9 +327,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             subtitle: const Text('View completed tasks'),
             onTap: () {
               Navigator.of(context).pop();
-              // TODO: Implement archive view
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Archive view coming soon!')),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ArchiveScreen()),
               );
             },
           ),
@@ -337,9 +338,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             subtitle: const Text('App preferences and settings'),
             onTap: () {
               Navigator.of(context).pop();
-              // TODO: Implement settings screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings coming soon!')),
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
